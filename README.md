@@ -2,6 +2,10 @@
 
 Mercato is a distributed order management system prototype designed around modular services, event-driven synchronization, and secure access controls. This implementation focuses on catalog, inventory, and order flows with service boundaries that are Kafka-ready while still being runnable locally with only Node.js.
 
+## Live Demo
+
+[https://mercato-c3gh.onrender.com/](https://mercato-c3gh.onrender.com/)
+
 ## What is included
 
 - Browser-based control room UI
