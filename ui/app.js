@@ -22,10 +22,12 @@ function setToken(token) {
   tokenOutput.value = token;
   if (token) {
     localStorage.setItem("mercato.token", token);
-    sessionState.textContent = "Token loaded";
+    sessionState.textContent = "Token active";
+    sessionState.classList.add("active");
   } else {
     localStorage.removeItem("mercato.token");
     sessionState.textContent = "No token loaded";
+    sessionState.classList.remove("active");
   }
 }
 
@@ -34,7 +36,7 @@ function logActivity(title, detail, tone = "info") {
     title,
     detail,
     tone,
-    createdAt: new Date().toLocaleTimeString()
+    createdAt: new Date().toLocaleTimeString("en-US", { hour12: false })
   });
 
   if (state.log.length > 12) {
@@ -51,7 +53,8 @@ function delay(ms) {
 function renderLog() {
   if (state.log.length === 0) {
     activityLog.className = "log-view empty";
-    activityLog.innerHTML = "No activity yet.";
+    activityLog.innerHTML =
+      '<span style="color:#4a5568">System initialized. Awaiting events...</span>';
     return;
   }
 
@@ -59,12 +62,12 @@ function renderLog() {
   activityLog.innerHTML = state.log
     .map(
       (entry) => `
-        <article class="log-entry">
+        <article class="log-entry tone-${entry.tone}">
           <header>
+            <span class="mini-label">[${entry.createdAt}]</span>
             <strong>${entry.title}</strong>
-            <span class="mini-label">${entry.createdAt}</span>
           </header>
-          <div>${entry.detail}</div>
+          <div>&gt; ${entry.detail}</div>
         </article>
       `
     )
@@ -91,7 +94,8 @@ async function apiRequest(baseUrl, pathname, options = {}) {
     : await response.text();
 
   if (!response.ok) {
-    const message = typeof body === "string" ? body : body.message || body.error || "Request failed";
+    const message =
+      typeof body === "string" ? body : body.message || body.error || "Request failed";
     throw new Error(message);
   }
 
@@ -160,8 +164,8 @@ function renderMetrics(metrics) {
           <span>${name}</span>
           <strong>${payload.eventBus?.published ?? 0}</strong>
           <p>
-            Delivered: ${payload.eventBus?.delivered ?? 0}<br>
-            Avg propagation: ${payload.eventBus?.averagePropagationDelayMs ?? 0}ms
+            Delivered: <span style="color:var(--text-main)">${payload.eventBus?.delivered ?? 0}</span><br>
+            Avg propagation: <span style="color:var(--accent-primary)">${payload.eventBus?.averagePropagationDelayMs ?? 0}ms</span>
           </p>
         </article>
       `
@@ -177,7 +181,7 @@ async function refreshData() {
 
   renderProducts(products.items || []);
   renderOrders(orders.items || []);
-  logActivity("Data refreshed", "Catalog products and orders were reloaded.");
+  logActivity("Data refreshed", "Catalog products and orders were reloaded.", "success");
 }
 
 async function refreshMetrics() {
@@ -197,12 +201,20 @@ async function refreshMetrics() {
   ]);
 
   renderMetrics(metricEntries);
-  logActivity("Metrics refreshed", "Service event throughput and latency were reloaded.");
+  logActivity(
+    "Metrics refreshed",
+    "Service event throughput and latency were reloaded.",
+    "success"
+  );
 }
 
 document.querySelector("#token-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
+  const btn = event.submitter;
+  const originalText = btn.textContent;
+  btn.textContent = "Generating...";
+  btn.disabled = true;
 
   try {
     const payload = await apiRequest("", "/api/auth/token", {
@@ -218,10 +230,13 @@ document.querySelector("#token-form").addEventListener("submit", async (event) =
     });
 
     setToken(payload.token);
-    logActivity("Token generated", `Issued roles: ${(payload.roles || []).join(", ")}`);
+    logActivity("Token generated", `Issued roles: ${(payload.roles || []).join(", ")}`, "success");
     await Promise.all([refreshData(), refreshMetrics()]);
   } catch (error) {
     logActivity("Token request failed", error.message, "error");
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
   }
 });
 
@@ -230,13 +245,17 @@ document.querySelector("#clear-token").addEventListener("click", () => {
   renderProducts([]);
   renderOrders([]);
   metricsView.innerHTML = "";
-  logActivity("Session cleared", "Stored token removed from the browser.");
+  logActivity("Session cleared", "Stored token removed from the browser.", "warning");
 });
 
 document.querySelector("#product-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   const formElement = event.currentTarget;
   const form = new FormData(formElement);
+  const btn = event.submitter;
+  const originalText = btn.textContent;
+  btn.textContent = "Publishing...";
+  btn.disabled = true;
 
   try {
     const payload = await apiRequest("", "/api/catalog/products", {
@@ -249,11 +268,14 @@ document.querySelector("#product-form").addEventListener("submit", async (event)
       })
     });
 
-    logActivity("Product published", `${payload.sku} is now available in catalog.`);
+    logActivity("Product published", `${payload.sku} is now available in catalog.`, "success");
     formElement.reset();
     await Promise.all([refreshData(), refreshMetrics()]);
   } catch (error) {
     logActivity("Product publish failed", error.message, "error");
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
   }
 });
 
@@ -261,6 +283,10 @@ document.querySelector("#inventory-form").addEventListener("submit", async (even
   event.preventDefault();
   const form = new FormData(event.currentTarget);
   const sku = form.get("sku");
+  const btn = event.submitter;
+  const originalText = btn.textContent;
+  btn.textContent = "Updating...";
+  btn.disabled = true;
 
   try {
     const payload = await apiRequest("", `/api/inventory/stock/${encodeURIComponent(sku)}`, {
@@ -270,17 +296,28 @@ document.querySelector("#inventory-form").addEventListener("submit", async (even
       })
     });
 
-    logActivity("Inventory updated", `${payload.sku} now has ${payload.available} units available.`);
+    logActivity(
+      "Inventory updated",
+      `${payload.sku} now has ${payload.available} units available.`,
+      "success"
+    );
     await delay(150);
     await Promise.all([refreshData(), refreshMetrics()]);
   } catch (error) {
     logActivity("Inventory update failed", error.message, "error");
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
   }
 });
 
 document.querySelector("#order-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
+  const btn = event.submitter;
+  const originalText = btn.textContent;
+  btn.textContent = "Processing...";
+  btn.disabled = true;
 
   try {
     const sku = String(form.get("sku"));
@@ -295,11 +332,15 @@ document.querySelector("#order-form").addEventListener("submit", async (event) =
 
     logActivity(
       "Order reserved",
-      `Order ${payload.orderId.slice(0, 8)} reserved ${payload.quantity} units of ${payload.sku}.`
+      `Order ${payload.orderId.slice(0, 8)} reserved ${payload.quantity} units of ${payload.sku}.`,
+      "success"
     );
     await Promise.all([refreshData(), refreshMetrics()]);
   } catch (error) {
     logActivity("Order creation failed", error.message, "error");
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
   }
 });
 

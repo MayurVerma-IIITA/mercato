@@ -3,184 +3,247 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Mercato Control Room</title>
+    <title>Mercato Command Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    >
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
-    <div class="backdrop"></div>
+    <div class="backdrop">
+      <div class="glow glow-1"></div>
+      <div class="glow glow-2"></div>
+      <div class="glow glow-3"></div>
+    </div>
+
     <main class="app-shell">
-      <section class="hero">
-        <p class="eyebrow">Distributed Order Management</p>
-        <h1>Mercato Control Room</h1>
-        <p class="hero-copy">
-          Operate catalog, inventory, and order flows from one interface while watching
-          event-driven synchronization happen across services.
-        </p>
+      <header class="hero">
+        <div class="hero-content">
+          <p class="eyebrow">Distributed Operations</p>
+          <h1>Mercato<br><span class="gradient-text">Command Center</span></h1>
+          <p class="hero-copy">
+            Real-time monitoring and control for catalog, inventory, and order
+            flows. Watch event-driven synchronization across microservices in a
+            unified interface.
+          </p>
+        </div>
         <div class="hero-metrics" id="hero-metrics">
-          <article>
-            <span>Services</span>
-            <strong>5</strong>
+          <article class="hero-metric-card">
+            <span class="pulse-dot"></span>
+            <div class="hm-info">
+              <span>Services</span>
+              <strong>5 Active</strong>
+            </div>
           </article>
-          <article>
-            <span>Mode</span>
-            <strong>Kafka-ready</strong>
+          <article class="hero-metric-card">
+            <span class="mini-icon">⚡</span>
+            <div class="hm-info">
+              <span>Mode</span>
+              <strong>Kafka-Ready</strong>
+            </div>
           </article>
-          <article>
-            <span>Security</span>
-            <strong>JWT + RBAC</strong>
+          <article class="hero-metric-card">
+            <span class="mini-icon">🔒</span>
+            <div class="hm-info">
+              <span>Security</span>
+              <strong>JWT + RBAC</strong>
+            </div>
           </article>
         </div>
-      </section>
+      </header>
 
       <section class="grid">
-        <article class="panel span-2">
+        <article class="panel span-2 session-panel">
           <div class="panel-head">
-            <div>
-              <p class="kicker">Access</p>
-              <h2>Session Setup</h2>
+            <div class="title-group">
+              <span class="node-icon">🔑</span>
+              <div>
+                <p class="kicker">Access Control</p>
+                <h2>Session Setup</h2>
+              </div>
             </div>
             <span class="pill" id="session-state">No token loaded</span>
           </div>
 
           <form id="token-form" class="form-grid">
             <label>
-              Subject
+              <span class="label-text">Subject</span>
               <input name="subject" value="mercato-admin" required>
             </label>
             <label>
-              Roles
+              <span class="label-text">Roles (comma separated)</span>
               <input name="roles" value="admin,sales-ops" required>
             </label>
             <label>
-              Expires In Seconds
+              <span class="label-text">Expires In (Sec)</span>
               <input name="expiresInSeconds" type="number" value="3600" min="60">
             </label>
             <div class="form-actions">
-              <button type="submit">Generate Token</button>
-              <button type="button" class="ghost" id="clear-token">Clear</button>
+              <button type="submit" class="btn-primary">Generate Token</button>
+              <button type="button" class="btn-ghost" id="clear-token">Clear</button>
             </div>
           </form>
 
-          <label class="full-width">
-            Active Token
-            <textarea id="token-output" rows="5" placeholder="JWT appears here"></textarea>
+          <label class="full-width token-display">
+            <span class="label-text">Active JWT Token</span>
+            <textarea
+              id="token-output"
+              rows="3"
+              placeholder="Awaiting generation..."
+              readonly
+            ></textarea>
           </label>
         </article>
 
         <article class="panel">
           <div class="panel-head">
-            <div>
-              <p class="kicker">Catalog</p>
-              <h2>Create Product</h2>
+            <div class="title-group">
+              <span class="node-icon">📦</span>
+              <div>
+                <p class="kicker">Catalog Service</p>
+                <h2>Create Product</h2>
+              </div>
             </div>
           </div>
 
           <form id="product-form" class="form-grid compact">
+            <div class="input-group-2">
+              <label>
+                <span class="label-text">SKU</span>
+                <input name="sku" placeholder="SKU-1001" required>
+              </label>
+              <label>
+                <span class="label-text">Price ($)</span>
+                <input
+                  name="price"
+                  type="number"
+                  min="0"
+                  value="99.00"
+                  step="0.01"
+                  required
+                >
+              </label>
+            </div>
             <label>
-              SKU
-              <input name="sku" placeholder="SKU-1001" required>
-            </label>
-            <label>
-              Name
-              <input name="name" placeholder="Mercato Duffel" required>
-            </label>
-            <label>
-              Price
-              <input name="price" type="number" min="0" value="99" required>
+              <span class="label-text">Product Name</span>
+              <input name="name" placeholder="Mercato Quantum Duffel" required>
             </label>
             <label class="full-width">
-              Description
-              <input name="description" placeholder="Utility travel bag">
+              <span class="label-text">Description</span>
+              <input name="description" placeholder="Next-gen utility travel bag">
             </label>
-            <button type="submit">Publish Product</button>
+            <button type="submit" class="btn-secondary">Publish Product</button>
           </form>
         </article>
 
         <article class="panel">
           <div class="panel-head">
-            <div>
-              <p class="kicker">Inventory</p>
-              <h2>Set Stock</h2>
+            <div class="title-group">
+              <span class="node-icon">📊</span>
+              <div>
+                <p class="kicker">Inventory Service</p>
+                <h2>Set Stock Levels</h2>
+              </div>
             </div>
           </div>
 
           <form id="inventory-form" class="form-grid compact">
             <label>
-              SKU
+              <span class="label-text">Target SKU</span>
               <input name="sku" placeholder="SKU-1001" required>
             </label>
             <label>
-              Available
+              <span class="label-text">Available Units</span>
               <input name="available" type="number" min="0" value="25" required>
             </label>
-            <button type="submit">Update Inventory</button>
+            <button type="submit" class="btn-secondary push-bottom">Update Inventory</button>
           </form>
         </article>
 
         <article class="panel">
           <div class="panel-head">
-            <div>
-              <p class="kicker">Orders</p>
-              <h2>Create Order</h2>
+            <div class="title-group">
+              <span class="node-icon">🛒</span>
+              <div>
+                <p class="kicker">Order Service</p>
+                <h2>Create Order</h2>
+              </div>
             </div>
           </div>
 
           <form id="order-form" class="form-grid compact">
             <label>
-              SKU
+              <span class="label-text">Target SKU</span>
               <input name="sku" placeholder="SKU-1001" required>
             </label>
             <label>
-              Quantity
+              <span class="label-text">Quantity Required</span>
               <input name="quantity" type="number" min="1" value="1" required>
             </label>
-            <button type="submit">Reserve and Order</button>
+            <button type="submit" class="btn-accent push-bottom">
+              Reserve &amp; Dispatch Order
+            </button>
           </form>
         </article>
 
-        <article class="panel span-2">
+        <article class="panel span-2 height-auto">
           <div class="panel-head">
-            <div>
-              <p class="kicker">Views</p>
-              <h2>System Snapshot</h2>
+            <div class="title-group">
+              <span class="node-icon">📡</span>
+              <div>
+                <p class="kicker">Live Views</p>
+                <h2>System Snapshot</h2>
+              </div>
             </div>
             <div class="button-row">
-              <button type="button" class="ghost" id="refresh-data">Refresh Data</button>
-              <button type="button" class="ghost" id="refresh-metrics">Refresh Metrics</button>
+              <button type="button" class="btn-ghost small" id="refresh-data">Sync Data</button>
+              <button type="button" class="btn-ghost small" id="refresh-metrics">
+                Sync Metrics
+              </button>
             </div>
           </div>
 
           <div class="data-grid">
-            <section>
-              <h3>Catalog Products</h3>
-              <div id="products-view" class="card-list empty">No products yet.</div>
+            <section class="data-section">
+              <h3 class="section-title">Global Catalog &amp; Inventory</h3>
+              <div id="products-view" class="card-list empty">No product records found.</div>
             </section>
-            <section>
-              <h3>Orders</h3>
-              <div id="orders-view" class="card-list empty">No orders yet.</div>
+            <section class="data-section">
+              <h3 class="section-title">Active Orders</h3>
+              <div id="orders-view" class="card-list empty">No order records found.</div>
             </section>
           </div>
         </article>
 
-        <article class="panel span-2">
+        <article class="panel span-2 metrics-panel">
           <div class="panel-head">
-            <div>
-              <p class="kicker">Operations</p>
-              <h2>Service Metrics</h2>
+            <div class="title-group">
+              <span class="node-icon">📈</span>
+              <div>
+                <p class="kicker">Operations</p>
+                <h2>Service Metrics</h2>
+              </div>
             </div>
           </div>
-
           <div id="metrics-view" class="metrics-grid"></div>
         </article>
 
         <article class="panel span-2">
           <div class="panel-head">
-            <div>
-              <p class="kicker">Audit</p>
-              <h2>Activity Log</h2>
+            <div class="title-group">
+              <span class="node-icon">⌘</span>
+              <div>
+                <p class="kicker">Event Audit</p>
+                <h2>Activity Log</h2>
+              </div>
             </div>
           </div>
-          <div id="activity-log" class="log-view"></div>
+          <div class="terminal-wrapper">
+            <div id="activity-log" class="log-view"></div>
+          </div>
         </article>
       </section>
     </main>
