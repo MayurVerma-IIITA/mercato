@@ -108,7 +108,8 @@ export function createUiService() {
 
       res.writeHead(200, {
         "content-type": "application/javascript; charset=utf-8",
-        "content-length": Buffer.byteLength(payload)
+        "content-length": Buffer.byteLength(payload),
+        "cache-control": "no-store"
       });
       res.end(payload);
       return;

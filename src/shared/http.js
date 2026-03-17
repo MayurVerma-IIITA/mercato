@@ -71,7 +71,8 @@ export async function serveStaticFile(res, filePath) {
     res.writeHead(200, {
       "content-type": contentType,
       "content-length": body.length,
-      "access-control-allow-origin": "*"
+      "access-control-allow-origin": "*",
+      "cache-control": "no-store"
     });
     res.end(body);
   } catch (error) {

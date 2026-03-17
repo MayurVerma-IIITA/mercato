@@ -44,6 +44,10 @@ function logActivity(title, detail, tone = "info") {
   renderLog();
 }
 
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function renderLog() {
   if (state.log.length === 0) {
     activityLog.className = "log-view empty";
@@ -267,6 +271,7 @@ document.querySelector("#inventory-form").addEventListener("submit", async (even
     });
 
     logActivity("Inventory updated", `${payload.sku} now has ${payload.available} units available.`);
+    await delay(150);
     await Promise.all([refreshData(), refreshMetrics()]);
   } catch (error) {
     logActivity("Inventory update failed", error.message, "error");
@@ -278,10 +283,12 @@ document.querySelector("#order-form").addEventListener("submit", async (event) =
   const form = new FormData(event.currentTarget);
 
   try {
+    const sku = String(form.get("sku"));
+    await delay(150);
     const payload = await apiRequest("", "/api/orders", {
       method: "POST",
       body: JSON.stringify({
-        sku: form.get("sku"),
+        sku,
         quantity: Number(form.get("quantity"))
       })
     });
