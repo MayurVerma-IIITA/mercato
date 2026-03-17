@@ -1,34 +1,77 @@
 # Mercato
 
-Mercato is a distributed order management system prototype designed around modular services, event-driven synchronization, and secure access controls. This implementation focuses on catalog, inventory, and order flows with service boundaries that are Kafka-ready while still being runnable locally with only Node.js.
+Mercato is a distributed order management system prototype designed around modular services, event-driven synchronization, and secure access controls. It focuses on catalog, inventory, and order workflows, with JWT/RBAC protection and a Kafka-ready event contract boundary.
 
 ## Live Demo
 
 [https://mercato-c3gh.onrender.com/](https://mercato-c3gh.onrender.com/)
 
-## What is included
+## Feature Highlights
 
-- Browser-based control room UI
-- Separate HTTP services for `auth`, `catalog`, `inventory`, and `order`
-- Event contracts and an in-memory broker that mirrors Kafka topic usage
-- JWT-based authentication using HS256
-- Role-Based Access Control for catalog, inventory, and order operations
-- Event-driven state propagation between services
-- Simple observability endpoints to inspect throughput and propagation delay
-- A smoke test that exercises cross-service synchronization
+- Browser-based operations dashboard for catalog, inventory, orders, metrics, and audit logs
+- Modular backend services for `auth`, `catalog`, `inventory`, `order`, and the `ui` gateway
+- Event-driven synchronization across services using explicit topic contracts
+- JWT-based authentication with role-based access control
+- Inventory reservation flow tied to order creation
+- Local smoke test covering the full product -> stock -> order path
+- Dockerized deployment for quick local or hosted demo rollout
 
-## Architecture
+## Architecture Overview
 
-```text
-Clients -> Auth Service -> JWT
-Clients -> Catalog Service ----\
-Clients -> Inventory Service ---+--> Event Bus (Kafka-ready topic contracts)
-Clients -> Order Service ------/
+```mermaid
+flowchart LR
+    U["Browser UI"] --> UI["UI Service / Proxy"]
+    UI --> AUTH["Auth Service"]
+    UI --> CAT["Catalog Service"]
+    UI --> INV["Inventory Service"]
+    UI --> ORD["Order Service"]
 
-Catalog events -> Inventory projection sync
-Inventory events -> Catalog availability sync
-Order commands -> Inventory reservations + order events
+    AUTH --> JWT["JWT Issuance"]
+    CAT --> BUS["Event Bus / Kafka-ready Topics"]
+    INV --> BUS
+    ORD --> BUS
+
+    BUS --> CATPROJ["Catalog Inventory Projection"]
+    BUS --> INVPROJ["Inventory Catalog Projection"]
+    ORD --> INV["Inventory Reservation API"]
 ```
+
+## Service Responsibilities
+
+- `UI Service`: serves the frontend and proxies browser requests to backend routes
+- `Auth Service`: issues signed JWT tokens with role claims
+- `Catalog Service`: manages product creation and updates
+- `Inventory Service`: manages stock levels and reservations
+- `Order Service`: creates orders and reserves live inventory
+- `Event Bus`: delivers service events using Kafka-shaped contracts
+
+## Implemented Flows
+
+1. Generate a JWT token from the UI or API.
+2. Create a catalog product.
+3. Set inventory for a SKU.
+4. Create an order for that SKU.
+5. Reserve inventory and reflect updated available/reserved values across the system.
+6. Inspect metrics and activity logs from the dashboard.
+
+## Current Tech Shape
+
+- Frontend: plain `HTML`, `CSS`, and `JavaScript`
+- Backend: Node.js HTTP services
+- Auth: HS256 JWT signing and verification
+- Authorization: role-based access control
+- Messaging: in-memory event bus with Kafka-ready topic structure
+- Deploy: Docker + Render
+
+## Current Constraints
+
+- Data is stored in memory, not in a persistent database
+- The event bus is not real Kafka yet; it is a local adapter with Kafka-style topics
+- The hosted deployment runs in a single Node process for demo simplicity
+
+## Why It Still Maps Well To A Distributed Design
+
+Even though the current hosted build runs as one process, the code is split by service responsibility and communicates through explicit event and API boundaries. That makes it suitable as a strong distributed systems prototype and a good base for production hardening.
 
 ## Roles
 
@@ -38,13 +81,24 @@ Order commands -> Inventory reservations + order events
 - `sales-ops`: create orders
 - `order-service`: reserve and release stock programmatically
 
-## Run locally
+## API Surface
+
+- `POST /api/auth/token`
+- `GET /api/catalog/products`
+- `POST /api/catalog/products`
+- `PUT /api/inventory/stock/:sku`
+- `POST /api/orders`
+- `GET /api/metrics/catalog`
+- `GET /api/metrics/inventory`
+- `GET /api/metrics/orders`
+
+## Run Locally
 
 ```bash
 node src/local-cluster.js
 ```
 
-The local cluster starts these services:
+The local cluster starts:
 
 - UI: `http://localhost:3000`
 - Auth: `http://localhost:4000`
@@ -52,46 +106,22 @@ The local cluster starts these services:
 - Inventory: `http://localhost:4002`
 - Order: `http://localhost:4003`
 
-Open `http://localhost:3000` to use the frontend dashboard.
-
-## Generate tokens
-
-```bash
-curl -X POST http://localhost:4000/auth/token \
-  -H "content-type: application/json" \
-  -d "{\"subject\":\"ops-user\",\"roles\":[\"admin\"]}"
-```
-
-Use the returned token as `Authorization: Bearer <token>`.
-
-## Example flow
-
-1. Create a product in catalog.
-2. Update stock in inventory.
-3. Create an order.
-4. Watch the order service reserve stock and emit events from the UI or API.
-5. Read metrics from `/metrics` on any service.
-
-## Smoke test
+## Local Validation
 
 ```bash
 node src/smoke-test.js
 ```
 
-The smoke test validates the backend flow and confirms the UI entrypoint is reachable.
+The smoke test validates:
 
-## Frontend
+- UI boot
+- token generation
+- product creation
+- inventory update
+- order reservation
+- final inventory state after ordering
 
-The frontend is a no-build static dashboard served by the UI service. It supports:
-
-- generating JWT tokens
-- creating catalog products
-- setting inventory
-- creating orders
-- viewing orders and products
-- refreshing service metrics
-
-Frontend files:
+## Frontend Files
 
 - `ui/index.html`
 - `ui/styles.css`
@@ -100,8 +130,6 @@ Frontend files:
 ## Deploy
 
 ### Docker
-
-Build and run:
 
 ```bash
 docker build -t mercato .
@@ -114,20 +142,11 @@ docker run -p 3000:3000 -p 4000:4000 -p 4001:4001 -p 4002:4002 -p 4003:4003 merc
 docker compose up --build
 ```
 
-This starts:
+### Render
 
-- the Mercato app container
-- a Redpanda container for future Kafka-backed evolution
+The project is already deployed on Render using the repo Dockerfile and a single public web service.
 
-### Production note
-
-The current deployment artifact runs the demo system in a single Node process. That is fine for demos, interviews, internal previews, and functional validation. For production, split the services into separate deployable units and replace the in-memory event bus with a Kafka client adapter.
-
-## Kafka-ready boundary
-
-The `EventBus` abstraction keeps topics and payloads explicit. In production, the in-memory adapter can be replaced with Kafka producers and consumers without changing service-level business logic.
-
-Topic contracts:
+## Event Contracts
 
 - `catalog.product.upserted`
 - `inventory.stock.changed`
@@ -136,6 +155,12 @@ Topic contracts:
 - `order.created`
 - `order.status.changed`
 
-## Docker Compose
+## Production Upgrade Path
 
-`docker-compose.yml` includes a Redpanda broker definition as a production-aligned local message bus option. The current Node prototype does not require it to run.
+To turn this into a stronger production-grade system:
+
+- add PostgreSQL or another persistent database
+- replace the in-memory bus with Kafka or Redpanda
+- split services into separately deployable containers
+- add tracing, retries, DLQ handling, and structured logging
+- add broader automated test coverage
