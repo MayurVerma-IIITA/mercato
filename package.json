@@ -1,0 +1,11 @@
+{
+  "name": "mercato",
+  "version": "1.0.0",
+  "description": "Mercato distributed order management system prototype",
+  "type": "module",
+  "scripts": {
+    "start": "node src/local-cluster.js",
+    "demo": "node src/demo.js",
+    "smoke": "node src/smoke-test.js"
+  }
+}

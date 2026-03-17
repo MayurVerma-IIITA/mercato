@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: mercato
+    runtime: docker
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: MERCATO_JWT_SECRET
+        generateValue: true

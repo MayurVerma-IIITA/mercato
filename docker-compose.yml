@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  mercato:
+    build:
+      context: .
+    ports:
+      - "3000:3000"
+      - "4000:4000"
+      - "4001:4001"
+      - "4002:4002"
+      - "4003:4003"
+    environment:
+      MERCATO_UI_PORT: 3000
+      MERCATO_AUTH_PORT: 4000
+      MERCATO_CATALOG_PORT: 4001
+      MERCATO_INVENTORY_PORT: 4002
+      MERCATO_ORDER_PORT: 4003
+      MERCATO_JWT_SECRET: mercato-dev-secret
+
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:v24.2.15
+    command:
+      - redpanda
+      - start
+      - --overprovisioned
+      - --smp
+      - "1"
+      - --memory
+      - "512M"
+      - --reserve-memory
+      - "0M"
+      - --node-id
+      - "0"
+      - --check=false
+      - --kafka-addr
+      - PLAINTEXT://0.0.0.0:9092,OUTSIDE://0.0.0.0:19092
+      - --advertise-kafka-addr
+      - PLAINTEXT://redpanda:9092,OUTSIDE://localhost:19092
+    ports:
+      - "9092:9092"
+      - "19092:19092"
