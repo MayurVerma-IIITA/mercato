@@ -90,14 +90,6 @@ export function createOrderService({ eventBus, jwtSecret, inventoryBaseUrl }) {
         return sendJson(res, 400, { error: "sku and quantity > 0 are required" });
       }
 
-      const projection = inventoryProjection.get(sku);
-      if (!projection) {
-        return sendJson(res, 409, {
-          error: "Inventory projection unavailable",
-          sku
-        });
-      }
-
       try {
         const reservation = await reserveInventory(sku, quantity);
         const order = {
