@@ -2,11 +2,10 @@ const defaults = window.MERCATO_CONFIG || {};
 
 const state = {
   token: localStorage.getItem("mercato.token") || "",
-  authBaseUrl: localStorage.getItem("mercato.authBaseUrl") || defaults.authBaseUrl,
-  catalogBaseUrl: localStorage.getItem("mercato.catalogBaseUrl") || defaults.catalogBaseUrl,
-  inventoryBaseUrl:
-    localStorage.getItem("mercato.inventoryBaseUrl") || defaults.inventoryBaseUrl,
-  orderBaseUrl: localStorage.getItem("mercato.orderBaseUrl") || defaults.orderBaseUrl,
+  authBaseUrl: defaults.authBaseUrl,
+  catalogBaseUrl: defaults.catalogBaseUrl,
+  inventoryBaseUrl: defaults.inventoryBaseUrl,
+  orderBaseUrl: defaults.orderBaseUrl,
   metrics: defaults.metrics || {},
   log: []
 };
@@ -168,8 +167,8 @@ function renderMetrics(metrics) {
 
 async function refreshData() {
   const [products, orders] = await Promise.all([
-    apiRequest(state.catalogBaseUrl, "/catalog/products"),
-    apiRequest(state.orderBaseUrl, "/orders")
+    apiRequest("", "/api/catalog/products"),
+    apiRequest("", "/api/orders")
   ]);
 
   renderProducts(products.items || []);
@@ -202,7 +201,7 @@ document.querySelector("#token-form").addEventListener("submit", async (event) =
   const form = new FormData(event.currentTarget);
 
   try {
-    const payload = await apiRequest(state.authBaseUrl, "/auth/token", {
+    const payload = await apiRequest("", "/api/auth/token", {
       method: "POST",
       body: JSON.stringify({
         subject: form.get("subject"),
@@ -236,7 +235,7 @@ document.querySelector("#product-form").addEventListener("submit", async (event)
   const form = new FormData(formElement);
 
   try {
-    const payload = await apiRequest(state.catalogBaseUrl, "/catalog/products", {
+    const payload = await apiRequest("", "/api/catalog/products", {
       method: "POST",
       body: JSON.stringify({
         sku: form.get("sku"),
@@ -260,7 +259,7 @@ document.querySelector("#inventory-form").addEventListener("submit", async (even
   const sku = form.get("sku");
 
   try {
-    const payload = await apiRequest(state.inventoryBaseUrl, `/inventory/stock/${encodeURIComponent(sku)}`, {
+    const payload = await apiRequest("", `/api/inventory/stock/${encodeURIComponent(sku)}`, {
       method: "PUT",
       body: JSON.stringify({
         available: Number(form.get("available"))
@@ -279,7 +278,7 @@ document.querySelector("#order-form").addEventListener("submit", async (event) =
   const form = new FormData(event.currentTarget);
 
   try {
-    const payload = await apiRequest(state.orderBaseUrl, "/orders", {
+    const payload = await apiRequest("", "/api/orders", {
       method: "POST",
       body: JSON.stringify({
         sku: form.get("sku"),
